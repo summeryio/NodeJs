@@ -1,30 +1,38 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const fs = require('fs')
+const multer = require('multer')
 
 const app = express()
 
-// post 传递json
-const jsonParser = bodyParser.json()
-const urlencodedParser = bodyParser.urlencoded({extended: false})
+const createFolder = (folder) => {
+    try {
+        fs.accessSync(folder)
+    } catch (error) {
+        fs.mkdirSync(folder)
+    }
+}
+const uploadFolder = './upload/'
+createFolder(uploadFolder)
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadFolder)
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname)
+    }
+})
+const upload = multer({storage: storage})
 
-app.get('/profire/:id/user/:name', (req, res) => {
-    console.dir(req.params);
-    res.send('profire page name: ' + req.params.name)
+app.get('/form', (req, res) => {
+    // const form = fs.readFileSync('./form.html', {encoding: 'utf8'})
+    // res.send(form)
+
+    res.sendFile(__dirname + '/form.html')
 })
 
-app.get('/query', (req, res) => {
-    console.dir(req.query);
-    res.send('query name ' + req.query.name)
-})
-
-app.post('/', urlencodedParser, (req, res) => {
-    console.dir(req.body);
-    res.send(req.body.name)
-})
-app.post('/upload', jsonParser, (req, res) => {
-    console.dir(req.body);
-    res.send(req.body.name)
+app.post('/upload', upload.single('logo'), (req, res) => {
+    res.send({'ret_code': 0})
 })
 
 app.listen(3000)
-// console.log('listening to port 3000');
